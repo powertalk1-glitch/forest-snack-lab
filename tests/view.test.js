@@ -1,0 +1,20 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createState,transition} from '../core.js';
+const v=await import('../view.js').catch(()=>({}));
+test('workbench renders actual grouped cookies, leftovers and action-gated concept explanation',()=>{
+ assert.equal(typeof v.workbench,'function');
+ let s=createState(0); let html=v.workbench(s);
+ assert.ok(!html.includes('是 12 的因數'));
+ s=transition(s,{type:'try',value:5});html=v.workbench(s);
+ assert.equal((html.match(/class="cookie"/g)||[]).length,12);
+ assert.ok(html.includes('剩下 2 片')); assert.ok(html.includes('data-choice="3"'));
+ s=transition(s,{type:'try',value:3});html=v.workbench(s);
+ assert.ok(html.includes('是 12 的因數'));assert.ok(html.includes('data-action="predict"'));
+ s=transition(s,{type:'predict'});html=v.workbench(s);
+ assert.ok(html.includes('16 片'));assert.ok(html.includes('data-verify="4"'));
+ assert.equal((html.match(/class="cookie"/g)||[]).length,0,'prediction has no worked answer visible');
+ let b=transition(createState(3),{type:'try',value:2});html=v.workbench(b);
+ assert.equal((html.match(/class="cookie"/g)||[]).length,6);
+ assert.ok(html.includes('6 片'));assert.ok(html.includes('data-action="add"'));
+});
